@@ -1,0 +1,54 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-"
+)
+library(subsetr)
+```
+# subsetr
+
+subsetr uses tidy evaluation principles developed in rlang to provide
+`subset.data.frame()` and `[.data.frame()` methods which use tidy non-standard
+evaluation.
+
+For most cases they provide drop in replacements for the existing methods, but
+can also avoid repetitive subsetting code. Because rlang provides robust
+lexical scoping they are suitable for use in top level scripts, functions and
+packages.
+
+## Examples
+
+```{r}
+# Most existing code will work identically
+mtcars[mtcars$hp > 250, "mpg"]
+
+# But you can also use NSE to make things simpler
+mtcars[hp > 250, "mpg"]
+
+# The `j` argument works the same as the `select` argument in `base::subset()`.
+mtcars[hp > 250, mpg:disp]
+
+mtcars[hp > 250, -mpg]
+```
+
+The `subset()` interface is identical, but it now can also work properly inside
+all functions.
+```{r}
+val <<- 400
+f <- function(x, val) {
+  lapply(x, base::subset.data.frame, hp > val)
+}
+f(list(mtcars), 250)
+
+f <- function(x, val) {
+  lapply(x, subset.data.frame, hp > val)
+}
+f(list(mtcars), 250)
+```
