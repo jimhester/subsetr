@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
 library(subsetr)
 ```
 # subsetr
+[![Travis build status](https://travis-ci.org/jimhester/subsetr.svg?branch=master)](https://travis-ci.org/jimhester/subsetr)
 
 subsetr uses tidy evaluation principles developed in rlang to provide
 `subset.data.frame()` and `[.data.frame()` methods which use tidy non-standard

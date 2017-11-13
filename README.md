@@ -3,6 +3,8 @@
 subsetr
 =======
 
+[![Travis build status](https://travis-ci.org/jimhester/subsetr.svg?branch=master)](https://travis-ci.org/jimhester/subsetr)
+
 subsetr uses tidy evaluation principles developed in rlang to provide `subset.data.frame()` and `[.data.frame()` methods which use tidy non-standard evaluation.
 
 For most cases they provide drop in replacements for the existing methods, but can also avoid repetitive subsetting code. Because rlang provides robust lexical scoping they are suitable for use in top level scripts, functions and packages.
