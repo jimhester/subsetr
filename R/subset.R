@@ -1,6 +1,7 @@
 #' @inherit base::subset
 #' @importFrom rlang eval_tidy enquo
-#' @export
+#' @rawNamespace export(subset.data.frame)
+#' @rawNamespace S3method(subset, data.frame)
 subset.data.frame <- function (x, subset, select, drop = FALSE, ...) {
   r <- if (missing(subset))
     rep_len(TRUE, nrow(x))
@@ -17,12 +18,23 @@ subset.data.frame <- function (x, subset, select, drop = FALSE, ...) {
     names(nl) <- names(x)
     eval_tidy(enquo(select), nl)
   }
-  x[r, vars, drop = drop]
+  base$`[.data.frame`(x, r, vars, drop = drop)
 }
 
 #' @inherit base::`[.data.frame`
-#' @export
+#' @rawNamespace export("[.data.frame")
+#' @rawNamespace S3method("[", data.frame)
 `[.data.frame` <- function(x, i, j, drop) {
+  # Protect against recursive calls
+  if (getOption("subsetr", FALSE)) {
+    if (missing(drop)) {
+      return(base$`[.data.frame`(x, i, j))
+    } else {
+      return(base$`[.data.frame`(x, i, j))
+    }
+  }
+  options(subsetr = TRUE)
+  on.exit(options(subsetr = FALSE))
   if (!missing(i)) {
     i <- eval_tidy(enquo(i), x)
   }
@@ -31,9 +43,28 @@ subset.data.frame <- function (x, subset, select, drop = FALSE, ...) {
     names(nl) <- names(x)
     j <- eval_tidy(enquo(j), nl)
   }
-  res <- base::`[.data.frame`(x, i, j, drop = FALSE)
+  res <- base$`[.data.frame`(x, i, j, drop = FALSE)
   if (missing(drop)) {
     drop <- missing(i) || ncol(res) == 1
   }
-  base::`[.data.frame`(res, , , drop = drop)
+  base$`[.data.frame`(res, , , drop = drop)
+}
+
+base <- new.env(emptyenv())
+
+.onAttach <- function(libname, pkgname) {
+  for (f_name in c("[.data.frame", "subset.data.frame")) {
+    (get("unlockBinding"))(f_name, env = baseenv())
+    base[[f_name]] <- get(f_name, baseenv())
+    assign(f_name, envir = baseenv(), get(f_name))
+    lockBinding(f_name, env = baseenv())
+  }
+}
+
+.onDetach <- function(libname) {
+  for (f_name in c("[.data.frame", "subset.data.frame")) {
+    (get("unlockBinding"))(f_name, env = baseenv())
+    assign(f_name, envir = baseenv(), base[[f_name]])
+    lockBinding(f_name, env = baseenv())
+  }
 }

@@ -30,7 +30,7 @@ packages.
 mtcars[mtcars$hp > 250, "mpg"]
 
 # But you can also use NSE to make things simpler
-mtcars[hp > 250, "mpg"]
+mtcars[hp > 250, mpg]
 
 # The `j` argument works the same as the `select` argument in `base::subset()`.
 mtcars[hp > 250, mpg:disp]
@@ -41,14 +41,16 @@ mtcars[hp > 250, -mpg]
 The `subset()` interface is identical, but it now can also work properly inside
 all functions.
 ```{r}
+detach(package:subsetr)
 val <<- 400
 f <- function(x, val) {
-  lapply(x, base::subset.data.frame, hp > val)
+  lapply(x, subset, hp > val)
 }
 f(list(mtcars), 250)
 
+library(subsetr)
 f <- function(x, val) {
-  lapply(x, subset.data.frame, hp > val)
+  lapply(x, subset, hp > val)
 }
 f(list(mtcars), 250)
 ```
