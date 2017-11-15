@@ -24,31 +24,35 @@ subset.data.frame <- function (x, subset, select, drop = FALSE, ...) {
 #' @inherit base::`[.data.frame`
 #' @rawNamespace export("[.data.frame")
 #' @rawNamespace S3method("[", data.frame)
-`[.data.frame` <- function(x, i, j, drop) {
-  # Protect against recursive calls
-  if (getOption("subsetr", FALSE)) {
-    if (missing(drop)) {
-      return(base$`[.data.frame`(x, i, j))
-    } else {
-      return(base$`[.data.frame`(x, i, j))
+`[.data.frame` <- local({
+  in_call <- FALSE
+
+  function(x, i, j, drop) {
+    # Protect against recursive calls
+    if (in_call) {
+      if (missing(drop)) {
+        return(base$`[.data.frame`(x, i, j))
+      } else {
+        return(base$`[.data.frame`(x, i, j))
+      }
     }
+    in_call <<- TRUE
+    on.exit(in_call <<- FALSE)
+    if (!missing(i)) {
+      i <- eval_tidy(enquo(i), x)
+    }
+    if (!missing(j)) {
+      nl <- as.list(seq_along(x))
+      names(nl) <- names(x)
+      j <- eval_tidy(enquo(j), nl)
+    }
+    res <- base$`[.data.frame`(x, i, j, drop = FALSE)
+    if (missing(drop)) {
+      drop <- missing(i) || ncol(res) == 1
+    }
+    base$`[.data.frame`(res, , , drop = drop)
   }
-  options(subsetr = TRUE)
-  on.exit(options(subsetr = FALSE))
-  if (!missing(i)) {
-    i <- eval_tidy(enquo(i), x)
-  }
-  if (!missing(j)) {
-    nl <- as.list(seq_along(x))
-    names(nl) <- names(x)
-    j <- eval_tidy(enquo(j), nl)
-  }
-  res <- base$`[.data.frame`(x, i, j, drop = FALSE)
-  if (missing(drop)) {
-    drop <- missing(i) || ncol(res) == 1
-  }
-  base$`[.data.frame`(res, , , drop = drop)
-}
+})
 
 base <- new.env(emptyenv())
 
